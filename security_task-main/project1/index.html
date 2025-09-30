@@ -1,0 +1,116 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Password Policy Demo</title>
+  <style>
+    body { font-family: Arial; max-width:680px; margin:30px; }
+    .ok { color:green } .bad { color:red }
+    ul { list-style: none; padding-left:0; }
+  </style>
+</head>
+<body>
+  <h2>Create Account — Strong Password Policy</h2>
+
+  <form id="signup" onsubmit="return submitForm()">
+    <label>
+      Username (or email):<br/>
+      <input id="username" required />
+    </label><br/><br/>
+
+    <label>
+      Phone (optional):<br/>
+      <input id="phone" />
+    </label><br/><br/>
+
+    <label>
+      Password:<br/>
+      <input id="password" type="password" required />
+    </label>
+    <button type="button" onclick="togglePwd()">Show/Hide</button>
+
+    <div id="checks">
+      <ul>
+        <li id="len" class="bad">● At least 12 characters</li>
+        <li id="upper" class="bad">● Uppercase letter (A–Z)</li>
+        <li id="lower" class="bad">● Lowercase letter (a–z)</li>
+        <li id="digit" class="bad">● Number (0–9)</li>
+        <li id="special" class="bad">● Special character (!@#$%^&*)</li>
+        <li id="common" class="bad">● Not a common password</li>
+        <li id="personal" class="bad">● Does not contain username/phone</li>
+      </ul>
+    </div>
+
+    <button id="submitBtn" type="submit" disabled>Create Account</button>
+  </form>
+
+  <script>
+    const commonPasswords = [
+      "123456","password","123456789","12345678","qwerty","abc123","111111","123123"
+    ];
+
+    const pwd = document.getElementById('password');
+    const userEl = document.getElementById('username');
+    const phoneEl = document.getElementById('phone');
+    const submitBtn = document.getElementById('submitBtn');
+
+    const checks = {
+      len: el('len'),
+      upper: el('upper'),
+      lower: el('lower'),
+      digit: el('digit'),
+      special: el('special'),
+      common: el('common'),
+      personal: el('personal')
+    };
+
+    function el(id){ return document.getElementById(id); }
+
+    pwd.addEventListener('input', validateAll);
+    userEl.addEventListener('input', validateAll);
+    phoneEl.addEventListener('input', validateAll);
+
+    function validateAll(){
+      const p = pwd.value;
+      const user = (userEl.value || '').toLowerCase();
+      const phone = (phoneEl.value || '').toLowerCase();
+
+      const hasLen = p.length >= 12;
+      const hasUpper = /[A-Z]/.test(p);
+      const hasLower = /[a-z]/.test(p);
+      const hasDigit = /[0-9]/.test(p);
+      const hasSpecial = /[!@#$%^&*(),.?":{}|<>[\]\\\/'`~\-+=;:_]/.test(p);
+
+      const isCommon = commonPasswords.includes(p.toLowerCase());
+      const containsPersonal = user && p.toLowerCase().includes(user) ||
+                               phone && p.toLowerCase().includes(phone.replace(/\D/g,'')) ||
+                               false;
+
+      toggleClass(checks.len, hasLen);
+      toggleClass(checks.upper, hasUpper);
+      toggleClass(checks.lower, hasLower);
+      toggleClass(checks.digit, hasDigit);
+      toggleClass(checks.special, hasSpecial);
+      toggleClass(checks.common, !isCommon);
+      toggleClass(checks.personal, !containsPersonal);
+
+      const allOk = hasLen && hasUpper && hasLower && hasDigit && hasSpecial && !isCommon && !containsPersonal;
+      submitBtn.disabled = !allOk;
+    }
+
+    function toggleClass(node, ok){
+      node.className = ok ? 'ok' : 'bad';
+    }
+
+    function togglePwd(){
+      pwd.type = pwd.type === 'password' ? 'text' : 'password';
+    }
+
+    function submitForm(){
+      // For demo, we simply show success. In production, POST to server.
+      alert('Client-side validation passed — now send to server for final checks & storage.');
+      return false; // prevent actual submit in demo
+    }
+  </script>
+</body>
+</html>
